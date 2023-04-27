@@ -1,0 +1,381 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2707
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh15160\viewkind0
+\deftab560
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+
+\f0\fs26 \cf0 #include <custom.mqh>\
+\
+\
+int Long;\
+double buylot =0;\
+double order ;\
+double selllot=0;\
+double lotsize = 0;\
+ bool isLong ;\
+ \
+void ordersend(bool MACDbuy1,bool rsibuy,bool MACDsell1,bool rsisell,bool RSIBUY,bool RSISELL,bool superbuy,bool supersell)\
+ \{ \
+      if(OrdersTotal()<1)\{\
+        if(MACDbuy1 && rsibuy && RSIBUY && superbuy )\
+        \{\
+          double low = lowprice();\
+           isLong=  true;\
+            \
+              double  profit = NormalizeDouble(CalculateTakeProfit(isLong,Ask,500),Digits);\
+              \
+                    buylot = NormalizeDouble(OptimalLotSize(0.02,Ask,low),2);\
+               \
+                 \
+                order =OrderSend(NULL,OP_BUY,buylot,Ask,2,low,profit,NULL,3333);\
+                \
+                Alert("buy order");\
+          \
+                \
+               \
+             \}\
+           \
+        \
+         else if(MACDsell1 && rsisell && RSIBUY && supersell )\
+         \{\
+            double high = highprice();\
+              isLong= false;\
+           \
+              double  profit = NormalizeDouble(CalculateTakeProfit(isLong,Bid,500),Digits);\
+              \
+            \
+                selllot = NormalizeDouble(OptimalLotSize(0.02,Bid,high),2);\
+              \
+                order = OrderSend(NULL,OP_SELL,selllot,Bid,2,high,profit,NULL,3333);\
+                Alert("sell order");\
+              \
+           \
+       \
+         \}\
+     \}\
+     \
+\}\
+       \
+       \
+       \
+void orderclose(bool MACDbuy,bool MACDsell,bool rsibuy,bool rsise\
+\
+ll)\
+       \{     \
+            if(OrderSelect(order,SELECT_BY_TICKET) == true)\
+              \{ \
+                 Long = OrderType();\
+               lotsize = OrderLots();\
+              \}\
+             \
+            if( MACDbuy  && Long ==1 && rsibuy)\{\
+                printf(Long);\
+         \
+\
+             int orderclosesell = OrderClose(order,lotsize,Ask,10,clrNONE);\
+            \}\
+           if( MACDsell  && Long ==0 && rsisell)\{\
+                printf(Long);\
+          \
+            int orderclosebuy= OrderClose(order,lotsize,Bid,10,clrNONE);\
+          \}\
+         \
+        \}\
+ double OptimalLotSize(double maxRiskPrc, int maxLossInPips)\
+\
+\{\
+\
+\
+\
+  double accEquity = AccountEquity();\
+\
+  Alert("accEquity: " + accEquity);\
+\
+  \
+\
+  double lotSize = MarketInfo(NULL,MODE_LOTSIZE);\
+\
+  Alert("lotSize: " + lotSize);\
+\
+  \
+\
+  double tickValue = MarketInfo(NULL,MODE_TICKVALUE);\
+\
+  \
+\
+  if(Digits <= 3)\
+\
+  \{\
+\
+   tickValue = tickValue /100;\
+\
+  \}\
+\
+  \
+\
+  Alert("tickValue: " + tickValue);\
+\
+  \
+\
+  double maxLossDollar = accEquity * maxRiskPrc;\
+\
+  Alert("maxLossDollar: " + maxLossDollar);\
+\
+  \
+\
+  double maxLossInQuoteCurr = maxLossDollar / tickValue;\
+\
+  Alert("maxLossInQuoteCurr: " + maxLossInQuoteCurr);\
+\
+  if(maxLossInPips <5)\{\
+         maxLossInPips = 5;\
+         \}\
+\
+  double optimalLotSize = (maxLossInQuoteCurr /(maxLossInPips * GetPipValue()));\
+\
+   optimalLotSize = NormalizeDouble(optimalLotSize/lotSize,2);\
+\
+  return optimalLotSize;\
+\
+ \
+\
+\}\
+\
+\
+\
+\
+\
+double OptimalLotSize(double maxRiskPrc, double entryPrice, double stopLoss)\
+\{\
+     double atr = iATR(NULL,PERIOD_CURRENT,14,0);\
+       int maxLossInPips = MathAbs(entryPrice - stopLoss)/GetPipValue();\
+     // if(maxLossInPips > 5)\{\
+       //  maxLossInPips = 5;\
+         \
+      // \}\
+       \
+      return OptimalLotSize(maxRiskPrc,maxLossInPips);\
+    \
+\}\
+      \
+int OnInit()\{\
+ string currencypair = Symbol(); \
+     Alert("algo is running on ",currencypair);\
+   return(INIT_SUCCEEDED);\
+\
+\}\
+ \
+void OnDeinit(const int reason)\{\
+\
+  string currencypair = Symbol(); \
+     Alert("algo is stoped running on",currencypair);\
+\
+\
+\}\
+ \
+void OnTick()\{\
+  \
+  \
+  \
+  \
+   \
+    bool MACDbuy;\
+     bool MACDsell;\
+     bool MACDbuy1;\
+     bool MACDsell1;\
+     \
+     double macdbar1 = NormalizeDouble(iMACD(NULL,PERIOD_CURRENT,12,26,9,PRICE_CLOSE,MODE_MAIN,0),Digits);\
+     double macdbar2 = NormalizeDouble(iMACD(NULL,PERIOD_CURRENT,12,26,9,PRICE_CLOSE,MODE_MAIN,1),Digits);\
+     double macdbar3 = NormalizeDouble(iMACD(NULL,PERIOD_CURRENT,12,26,9,PRICE_CLOSE,MODE_MAIN,2),Digits);\
+     \
+      double macdbar11 = NormalizeDouble(iMACD(NULL,PERIOD_H1,12,26,9,PRICE_CLOSE,MODE_MAIN,0),Digits);\
+     double macdbar22 = NormalizeDouble(iMACD(NULL,PERIOD_H1,12,26,9,PRICE_CLOSE,MODE_MAIN,1),Digits);\
+     double macdbar33 = NormalizeDouble(iMACD(NULL,PERIOD_H1,12,26,9,PRICE_CLOSE,MODE_MAIN,2),Digits);\
+    \
+        \
+       \
+       if(macdbar11 < macdbar22 && macdbar22 < macdbar33)\
+       \{\
+         MACDsell = true;\
+       \}\
+       \
+       else\
+       \{ \
+         MACDsell = false;\
+       \}\
+       \
+       \
+        if(macdbar11 >macdbar22 && macdbar22 >macdbar33)\
+        \{\
+           MACDbuy =true;\
+        \}\
+        else\
+        \{\
+          MACDbuy = false;\
+        \}\
+        \
+       if(macdbar1>0)\{\
+       if(macdbar1 < macdbar2  && macdbar2 < macdbar3)\
+       \{\
+         MACDsell1 = true;\
+       \}\
+       \
+       else\
+       \{ \
+         MACDsell1 = false;\
+       \}\
+       \}\
+      if(macdbar1 <0)\{\
+       \
+        if(macdbar1 > macdbar2  && macdbar2 > macdbar3)\
+        \{\
+           MACDbuy1 =true;\
+        \}\
+        else\
+        \{\
+          MACDbuy1 = false;\
+        \}\
+        \}\
+        \
+       \
+      bool rsibuy ;\
+      bool rsisell;\
+      string indicatorname ="Stoch RSI";\
+      double sRSIBLUE = iCustom(NULL,PERIOD_CURRENT,indicatorname,3,3,14,14,PRICE_CLOSE,0,0);\
+      double sRSIRED = iCustom(NULL,PERIOD_CURRENT,indicatorname,3,3,14,14,PRICE_CLOSE,1,0);\
+      if(sRSIBLUE>sRSIRED)\{\
+         rsibuy = true;\
+      \}\
+      else\{\
+         rsibuy = false;\
+       \}\
+       if(sRSIBLUE<sRSIRED)\{\
+         rsisell = true;\
+      \}\
+      else\{\
+         rsisell = false;\
+       \}\
+       bool sellclose;\
+     bool buyclose;\
+    double bar1 = iClose(_Symbol,_Period,0);\
+      double bar2 = iClose(_Symbol,_Period,1);\
+     double bar3 = iClose(_Symbol,_Period,2);\
+      if(bar1<bar2 && bar2 >bar3)\{\
+        sellclose = true;\
+      \}\
+      else\{\
+         sellclose = false;\
+        \}\
+      if(bar1>bar2 && bar2 <bar3)\{\
+         buyclose = true;\
+      \}\
+      else\{\
+         buyclose = false;\
+       \}\
+       bool RSIBUY ;\
+       bool RSISELL;\
+       double  rsi = iRSI(NULL,PERIOD_CURRENT,14,PRICE_CLOSE,0);\
+       double rsibar1 = iRSI(NULL,PERIOD_CURRENT,14,PRICE_CLOSE,1);\
+       double rsibar2 = iRSI(NULL,PERIOD_CURRENT,14,PRICE_CLOSE,2);\
+      if(rsi < 35 )\
+      \{ RSIBUY= true;\
+      \}\
+      else\
+      \{ RSIBUY = false;\
+      \}\
+      if(rsi > 55)\
+      \{ RSISELL = true;\
+      \}\
+      else\
+      \{ RSISELL = false;\
+      \}\
+     double psar = iSAR(NULL,PERIOD_M30,0.02,0.2,0);\
+      bool psarbuy;\
+       bool psarsell;\
+       if(psar < Ask)\{\
+            psarbuy = true;\
+         \}\
+       else\{\
+            psarbuy = false;\
+          \}\
+        if(psar > Ask)\{\
+             psarsell = true;\
+          \}\
+          else\{\
+              psarsell = false;\
+           \}\
+        double ma = iMA(NULL,PERIOD_M5,9,0,1,0,0);\
+           bool mabuy;\
+           bool masell;\
+           if(ma < Ask)\{\
+             mabuy = true;\
+         \}\
+       else\{\
+             mabuy = false;\
+          \}\
+        if(ma > Bid)\{\
+             masell = true;\
+          \}\
+          else\{\
+             masell = false;\
+           \}\
+      // bool superbuy;\
+        //bool supersell;\
+      //  string indicatorname1 = "Downloads\\\\SuperTrend";\
+     //   double trend = NormalizeDouble(iCustom(NULL,PERIOD_H4,indicatorname1,10,3,0,0),Digits);\
+     //   if(Ask > trend)\{\
+       //     superbuy = true;\
+       //  \}\
+     //    else\{\
+     //       superbuy = false;\
+     //    \}\
+     //     if(Bid < trend)\{\
+     //        supersell = true;\
+      //    \}\
+       //   else\{\
+         //     supersell = false;\
+           // \}\
+            \
+            \
+          bool atr;\
+          double atr1 = iATR(NULL,PERIOD_CURRENT,14,0);\
+          if(atr1 >0.0003)\{\
+             atr = true;\
+           \}\
+           else\{\
+             atr = false;\
+            \}\
+       double closed1 = iClose(NULL,PERIOD_CURRENT,0);\
+       double closed2 = iClose(NULL,PERIOD_CURRENT,1);\
+       double closed3 = iClose(NULL,PERIOD_CURRENT,2);\
+       bool closedbuy;\
+       bool closedsell;\
+       if(closed3< closed2 <closed1)\{\
+           closedbuy= true;\
+        \}\
+        else\{\
+           closedbuy = false;\
+         \}\
+        if(closed1 < closed2 < closed3)\{\
+            closedsell = true;\
+         \}\
+         else\{\
+             closedsell = true;\
+           \}\
+            \
+            \
+\
+        if(OrdersTotal()<1)\
+        \{ ordersend(MACDbuy,rsibuy,MACDsell,rsisell,MACDbuy1,MACDsell1,rsibuy,rsisell);\
+        \}\
+        if(OrdersTotal()>0)\
+        \{ orderclose(MACDbuy,MACDsell,rsibuy,rsisell);\
+        \}\
+       \
+\
+         \
+      \
+\}\
+}

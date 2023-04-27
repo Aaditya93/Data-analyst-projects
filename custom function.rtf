@@ -1,0 +1,309 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2707
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh15220\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #property copyright "Aaditya"\
+#property link      "https://www.mql5.com"\
+#property version   "1.00"\
+#property strict\
+//+------------------------------------------------------------------+\
+//| Script program start function                                    |\
+//+------------------------------------------------------------------+\
+double CalculateTakeProfit(bool islong, double entryPrice, int pips)\
+\
+\{\
+\
+   double takeProfit;\
+\
+   if(islong)\
+\
+   \{\
+\
+      takeProfit = entryPrice + pips * GetPipValue();\
+\
+   \}\
+\
+   else\
+\
+   \{\
+\
+      takeProfit = entryPrice - pips * GetPipValue();\
+\
+   \}\
+\
+   \
+\
+   return takeProfit;\
+\
+\}\
+\
+\
+\
+double CalculateStopLoss(bool islong, double entryPrice, int pips)\
+\
+\{\
+\
+   double stopLoss;\
+\
+   if(islong)\
+\
+   \{\
+\
+      stopLoss = entryPrice - pips * GetPipValue();\
+\
+   \}\
+\
+   else\
+\
+   \{\
+\
+      stopLoss = entryPrice + pips * GetPipValue();\
+\
+   \}\
+\
+   return stopLoss;\
+\
+\}\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+double GetPipValue()\
+\
+\{\
+\
+   if(_Digits >=4)\
+\
+   \{\
+\
+      return 0.0001;\
+\
+   \}\
+\
+   else\
+\
+   \{\
+\
+      return 0.01;\
+\
+   \}\
+\
+\}\
+\
+\
+\
+\
+\
+void DayOfWeekAlert()\
+\
+\{\
+\
+\
+\
+   Alert("");\
+\
+   \
+\
+   int dayOfWeek = DayOfWeek();\
+\
+   \
+\
+   switch (dayOfWeek)\
+\
+   \{\
+\
+      case 1 : Alert("We are Monday. Let's try to enter new trades"); break;\
+\
+      case 2 : Alert("We are tuesday. Let's try to enter new trades or close existing trades");break;\
+\
+      case 3 : Alert("We are wednesday. Let's try to enter new trades or close existing trades");break;\
+\
+      case 4 : Alert("We are thursday. Let's try to enter new trades or close existing trades");break;\
+\
+      case 5 : Alert("We are friday. Close existing trades");break;\
+\
+      case 6 : Alert("It's the weekend. No Trading.");break;\
+\
+      case 0 : Alert("It's the weekend. No Trading.");break;\
+\
+      default : Alert("Error. No such day in the week.");\
+\
+   \}\
+\
+\}\
+\
+\
+\
+\
+\
+double GetStopLossPrice(bool bIsLongPosition, double entryPrice, int maxLossInPips)\
+\
+\{\
+\
+   double stopLossPrice;\
+\
+   if (bIsLongPosition)\
+\
+   \{\
+\
+      stopLossPrice = entryPrice - maxLossInPips * 0.0001;\
+\
+   \}\
+\
+   else\
+\
+   \{\
+\
+      stopLossPrice = entryPrice + maxLossInPips * 0.0001;\
+\
+   \}\
+\
+   return stopLossPrice;\
+\
+\}\
+\
+\
+\
+\
+\
+bool IsTradingAllowed()\
+\
+\{\
+\
+   if(!IsTradeAllowed())\
+\
+   \{\
+\
+      Print("Expert Advisor is NOT Allowed to Trade. Check AutoTrading.");\
+\
+      return false;\
+\
+   \}\
+\
+   \
+\
+   if(!IsTradeAllowed(Symbol(), TimeCurrent()))\
+\
+   \{\
+\
+      Print("Trading NOT Allowed for specific Symbol and Time");\
+\
+      return false;\
+\
+   \}\
+\
+   \
+\
+   return true;\
+\
+\}\
+\
+\
+\
+\
+bool CheckIfOpenOrdersByMagicNB(int magicNB)\
+\
+\{\
+\
+   int openOrders = OrdersTotal();\
+\
+   \
+\
+   for(int i = 0; i < openOrders; i++)\
+\
+   \{\
+\
+      if(OrderSelect(i,SELECT_BY_POS)==true)\
+\
+      \{\
+\
+         if(OrderMagicNumber() == magicNB) \
+\
+         \{\
+\
+            return true;\
+\
+         \}  \
+\
+      \}\
+\
+   \}\
+\
+   return false;\
+\
+\}\
+   double highprice()\
+       \{ \
+         \
+         double highestbar2 = iHigh(NULL,PERIOD_CURRENT,1);\
+         double highestbar3 = iHigh(NULL,PERIOD_CURRENT,2);\
+         double highestbar4 = iHigh(NULL,PERIOD_CURRENT,3);\
+          double high = 0;\
+         if(highestbar2<highestbar3)\
+         \{\
+              if(highestbar4<highestbar2)\
+              \{\
+                 high = highestbar2;\
+              \}\
+              else\
+              \{\
+                  high = highestbar4;\
+               \}\
+         \}\
+          else \
+          \{\
+              if(highestbar4<highestbar3)\
+              \{\
+                 high = highestbar3;\
+               \}\
+              else\
+              \{\
+                  high = highestbar4;\
+               \}\
+             \}  \
+             return NormalizeDouble(high,Digits);\
+          \}\
+          \
+          \
+          \
+           double lowprice()\
+        \{   \
+         double lowestbar2 = iLow(NULL,PERIOD_CURRENT,1);\
+         double lowestbar3 = iLow(NULL,PERIOD_CURRENT,2);\
+         double lowestbar4 = iLow(NULL,PERIOD_CURRENT,3);\
+         double low =0;\
+         \
+         if(lowestbar2>lowestbar3)\
+         \{\
+              if(lowestbar3<lowestbar4)\
+              \{\
+                 low = lowestbar3;\
+               \}\
+              else\
+              \{\
+                  low = lowestbar4;\
+               \}\
+           \}\
+          else \
+          \{\
+               if(lowestbar2<lowestbar4)\
+               \{\
+                 low = lowestbar2;\
+               \}\
+              else\
+              \{\
+              \
+                  low = lowestbar4;\
+                \}\
+          \}\
+             return NormalizeDouble(low,Digits);\
+          \}\
+}
